@@ -157,11 +157,15 @@ if st.button("✨ 카드 뽑기 ✨"):
         st.rerun()
 
 # ---------------- 결과 표시 ----------------
+# ---------------- 결과 표시 ----------------
 if st.session_state.drawn and st.session_state.result:
     st.markdown(f"<h2>✨ {name}님의 타로 결과 ✨</h2>", unsafe_allow_html=True)
 
     positions = ["과거", "현재", "미래"] if len(st.session_state.result) == 3 else ["오늘의 운세"]
     cols = st.columns(len(st.session_state.result))
+
+    # 정방향 개수 세기 (전체 분위기 판단용)
+    up_count = 0
 
     for i, (card, direction) in enumerate(st.session_state.result):
         with cols[i]:
@@ -170,12 +174,66 @@ if st.session_state.drawn and st.session_state.result:
             st.markdown(f"**🔸 {direction}**")
             if direction == "정방향":
                 st.success(card["up"])
+                up_count += 1
             else:
                 st.info(card["down"])
 
     st.balloons()
 
+    # ---------------- 🔮 종합 해석 ----------------
+    st.markdown("---")
+    st.markdown("<h2>🔮 종합 해석 🔮</h2>", unsafe_allow_html=True)
+
+    total = len(st.session_state.result)
+
+    # 쓰리 카드일 때: 과거-현재-미래 흐름으로 엮기
+    if total == 3:
+        past = st.session_state.result[0]
+        now = st.session_state.result[1]
+        future = st.session_state.result[2]
+
+        def key(item):
+            card, direction = item
+            return card["up"] if direction == "정방향" else card["down"]
+
+        flow = (
+            f"**{name}**님의 지난 시간은 『{past[0]['name']}』의 기운으로, "
+            f"{key(past)} "
+            f"현재는 『{now[0]['name']}』가 말하듯 {key(now)} "
+            f"그리고 다가올 미래에는 『{future[0]['name']}』의 흐름 속에서 {key(future)}"
+        )
+        st.markdown(f"<p style='font-size:17px; line-height:1.8;'>{flow}</p>", unsafe_allow_html=True)
+
+    # 원 카드일 때
+    else:
+        card, direction = st.session_state.result[0]
+        key = card["up"] if direction == "정방향" else card["down"]
+        st.markdown(
+            f"<p style='font-size:17px; line-height:1.8;'>"
+            f"오늘 **{name}**님에게 온 카드는 『{card['name']}』입니다. "
+            f"{key}</p>",
+            unsafe_allow_html=True
+        )
+
+    # 전체 분위기 (정방향 비율로 판단)
+    st.markdown("### 🌈 오늘의 기운")
+    if total == 3:
+        if up_count == 3:
+            st.success("✨ 매우 좋은 흐름이에요! 자신감을 가지고 나아가세요!")
+        elif up_count == 2:
+            st.success("🍀 대체로 긍정적인 기운이 흐르고 있어요.")
+        elif up_count == 1:
+            st.info("🌤️ 조심스러운 시기예요. 신중하게 행동하면 좋아요.")
+        else:
+            st.info("🌙 잠시 쉬어가는 시간이에요. 무리하지 마세요.")
+    else:
+        if up_count == 1:
+            st.success("🍀 긍정의 기운이 함께합니다!")
+        else:
+            st.info("🌙 조금은 신중함이 필요한 하루예요.")
+
     # 다시 뽑기 버튼
+    st.markdown("---")
     if st.button("🔄 다시 뽑기"):
         st.session_state.drawn = False
         st.session_state.result = []
