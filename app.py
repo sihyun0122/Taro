@@ -87,6 +87,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------- 타로 카드 데이터 (메이저 아르카나 22장) ----------------
+# ✅ 모든 URL을 위키미디어 표준 형식(RWS_Tarot_XX_이름.jpg)으로 통일했습니다.
 tarot_cards = [
     {"name": "0. The Fool (바보)", "img": "https://upload.wikimedia.org/wikipedia/commons/9/90/RWS_Tarot_00_Fool.jpg",
      "up": "새로운 시작이지만... 그 끝은 아무도 모른다.", "down": "무모한 발걸음이 당신을 낭떠러지로 이끈다."},
@@ -100,7 +101,8 @@ tarot_cards = [
      "up": "차가운 권력이 당신을 지배한다.", "down": "고집이 당신을 파멸로 몰아간다."},
     {"name": "5. The Hierophant (교황)", "img": "https://upload.wikimedia.org/wikipedia/commons/8/8d/RWS_Tarot_05_Hierophant.jpg",
      "up": "오래된 규율이 당신을 옭아맨다.", "down": "금기를 어긴 자에게 벌이 내린다."},
-    {"name": "6. The Lovers (연인)", "img": "https://upload.wikimedia.org/wikipedia/commons/3/3a/TheLovers.jpg",
+    # ✅ 여기가 수정된 부분! TheLovers.jpg → RWS_Tarot_06_Lovers.jpg
+    {"name": "6. The Lovers (연인)", "img": "https://upload.wikimedia.org/wikipedia/commons/d/db/RWS_Tarot_06_Lovers.jpg",
      "up": "운명의 인연... 혹은 저주받은 만남.", "down": "잘못된 선택이 파국을 부른다."},
     {"name": "7. The Chariot (전차)", "img": "https://upload.wikimedia.org/wikipedia/commons/9/9b/RWS_Tarot_07_Chariot.jpg",
      "up": "멈출 수 없는 폭주가 시작된다.", "down": "방향을 잃은 채 어둠 속을 달린다."},
@@ -133,6 +135,20 @@ tarot_cards = [
     {"name": "21. The World (세계)", "img": "https://upload.wikimedia.org/wikipedia/commons/f/ff/RWS_Tarot_21_World.jpg",
      "up": "완성... 그러나 대가가 따른다.", "down": "닫히지 않는 순환의 굴레."},
 ]
+
+# ---------------- 이미지 안전 표시 함수 ----------------
+# ✅ 이미지 로딩 실패 시 카드 뒷면 이모지로 대체하는 함수
+def show_card_image(card):
+    try:
+        st.image(card["img"], width=180, caption=card["name"])
+    except Exception:
+        st.markdown(
+            f"<div style='text-align:center; font-size:70px; "
+            f"border:3px solid #800000; border-radius:8px; padding:20px; "
+            f"background:#1a0000; box-shadow:0 0 25px rgba(200,0,0,0.6);'>🂠</div>",
+            unsafe_allow_html=True
+        )
+        st.markdown(f"<p style='text-align:center;'>{card['name']}</p>", unsafe_allow_html=True)
 
 # ---------------- 상태 저장 (세션) ----------------
 if "drawn" not in st.session_state:
@@ -182,15 +198,15 @@ if st.session_state.drawn and st.session_state.result:
     for i, (card, direction) in enumerate(st.session_state.result):
         with cols[i]:
             st.markdown(f"### {positions[i]}")
-            st.image(card["img"], width=180, caption=card["name"])
+            show_card_image(card)   # ✅ 안전 표시 함수 사용
             st.markdown(f"**🔻 {direction}**")
             if direction == "정방향":
-                st.error(card["up"])   # 공포 분위기: 붉은 박스로 통일
+                st.error(card["up"])
                 up_count += 1
             else:
                 st.error(card["down"])
 
-    # st.balloons() 대신 눈(snow)이 스산하게 내리는 효과
+    # 스산한 눈 내리는 효과
     st.snow()
 
     # ---------------- 🕯️ 종합 해석 ----------------
