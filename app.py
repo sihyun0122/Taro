@@ -2,73 +2,86 @@ import streamlit as st
 import random
 
 # ---------------- 페이지 기본 설정 ----------------
-st.set_page_config(page_title="🔮 신비의 타로", page_icon="🔮", layout="centered")
+st.set_page_config(page_title="🕯️ 저주받은 타로", page_icon="💀", layout="centered")
 
-# ---------------- CSS 디자인 + 애니메이션 ----------------
+# ---------------- CSS 디자인 + 애니메이션 (공포 버전) ----------------
 st.markdown("""
     <style>
-    /* 전체 배경 - 보라빛 밤하늘 */
+    /* 전체 배경 - 핏빛 어둠 */
     .stApp {
-        background: linear-gradient(135deg, #1a0033 0%, #2d1b4e 50%, #0d001a 100%);
-        color: #f0e6ff;
+        background: linear-gradient(135deg, #0d0000 0%, #1a0000 50%, #000000 100%);
+        color: #d9c2c2;
     }
     h1, h2, h3 {
-        color: #ffd700 !important;
+        color: #b30000 !important;
         text-align: center;
-        text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        text-shadow: 0 0 12px rgba(255, 0, 0, 0.7);
+        letter-spacing: 2px;
     }
     p, label, .stMarkdown {
-        color: #e6d9ff !important;
+        color: #cfa8a8 !important;
     }
-    /* 버튼 */
+    /* 버튼 - 핏빛 */
     .stButton>button {
-        background: linear-gradient(90deg, #8e2de2, #4a00e0);
-        color: white;
-        border: 2px solid #ffd700;
-        border-radius: 25px;
+        background: linear-gradient(90deg, #4a0000, #800000);
+        color: #e0d0d0;
+        border: 2px solid #b30000;
+        border-radius: 5px;
         padding: 10px 30px;
         font-size: 18px;
         font-weight: bold;
         display: block;
         margin: 0 auto;
         transition: 0.3s;
+        text-shadow: 0 0 8px rgba(255,0,0,0.6);
     }
     .stButton>button:hover {
-        background: linear-gradient(90deg, #ffd700, #ff8c00);
-        color: #1a0033;
+        background: linear-gradient(90deg, #800000, #ff0000);
+        color: #000000;
         transform: scale(1.05);
+        box-shadow: 0 0 25px rgba(255, 0, 0, 0.8);
     }
-    /* 카드 이미지 테두리 */
+    /* 카드 이미지 테두리 - 붉은 핏빛 */
     .stImage img {
-        border-radius: 15px;
-        border: 3px solid #ffd700;
-        box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+        border-radius: 8px;
+        border: 3px solid #800000;
+        box-shadow: 0 0 25px rgba(200, 0, 0, 0.6);
+        filter: brightness(0.85) contrast(1.1);
     }
 
-    /* 뒷면 카드가 둥둥 떠다니는 애니메이션 */
-    @keyframes float {
-        0%   { transform: translateY(0px); }
-        50%  { transform: translateY(-15px); }
-        100% { transform: translateY(0px); }
+    /* 뒷면 카드가 불안하게 떨리는 애니메이션 */
+    @keyframes shake {
+        0%   { transform: translate(0, 0) rotate(0deg); }
+        25%  { transform: translate(-2px, 1px) rotate(-1deg); }
+        50%  { transform: translate(2px, -1px) rotate(1deg); }
+        75%  { transform: translate(-1px, 2px) rotate(-1deg); }
+        100% { transform: translate(0, 0) rotate(0deg); }
+    }
+    /* 촛불처럼 깜빡이는 효과 */
+    @keyframes flicker {
+        0%, 100% { opacity: 1; }
+        45%      { opacity: 0.6; }
+        50%      { opacity: 0.85; }
+        55%      { opacity: 0.5; }
     }
     .floating-card {
-        animation: float 2s ease-in-out infinite;
+        animation: shake 0.6s ease-in-out infinite, flicker 2s infinite;
         font-size: 90px;
         text-align: center;
-        border: 3px solid #ffd700;
-        border-radius: 15px;
+        border: 3px solid #800000;
+        border-radius: 8px;
         padding: 25px 10px;
-        background: #2d1b4e;
-        box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+        background: #1a0000;
+        box-shadow: 0 0 25px rgba(200, 0, 0, 0.6);
     }
 
-    /* 결과 카드가 스르륵 나타나는 효과 */
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to   { opacity: 1; transform: translateY(0); }
+    /* 결과 카드가 스멀스멀 나타나는 효과 */
+    @keyframes creepIn {
+        from { opacity: 0; transform: translateY(30px) scale(0.9); filter: blur(4px); }
+        to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
     }
     .stImage {
-        animation: fadeInUp 1s ease;
+        animation: creepIn 1.5s ease;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -76,49 +89,49 @@ st.markdown("""
 # ---------------- 타로 카드 데이터 (메이저 아르카나 22장) ----------------
 tarot_cards = [
     {"name": "0. The Fool (바보)", "img": "https://upload.wikimedia.org/wikipedia/commons/9/90/RWS_Tarot_00_Fool.jpg",
-     "up": "새로운 시작과 모험이 기다립니다.", "down": "무모한 행동은 잠시 멈추고 신중하세요."},
+     "up": "새로운 시작이지만... 그 끝은 아무도 모른다.", "down": "무모한 발걸음이 당신을 낭떠러지로 이끈다."},
     {"name": "1. The Magician (마법사)", "img": "https://upload.wikimedia.org/wikipedia/commons/d/de/RWS_Tarot_01_Magician.jpg",
-     "up": "당신의 재능으로 원하는 것을 이룰 수 있어요.", "down": "자신감이 부족하거나 기회를 놓칠 수 있습니다."},
+     "up": "당신의 재능이 어둠 속에서 깨어난다.", "down": "잘못된 주문이 당신을 삼킬 것이다."},
     {"name": "2. The High Priestess (여사제)", "img": "https://upload.wikimedia.org/wikipedia/commons/8/88/RWS_Tarot_02_High_Priestess.jpg",
-     "up": "직관을 믿으면 좋은 답을 찾습니다.", "down": "숨겨진 진실에 주의가 필요합니다."},
+     "up": "숨겨진 비밀이 당신을 부른다.", "down": "알아서는 안 될 진실이 다가온다."},
     {"name": "3. The Empress (여황제)", "img": "https://upload.wikimedia.org/wikipedia/commons/d/d2/RWS_Tarot_03_Empress.jpg",
-     "up": "풍요와 사랑, 안정이 함께합니다.", "down": "자신을 돌보는 시간이 필요합니다."},
+     "up": "풍요 뒤에 도사린 그림자를 보라.", "down": "잃어버린 것들이 밤마다 찾아온다."},
     {"name": "4. The Emperor (황제)", "img": "https://upload.wikimedia.org/wikipedia/commons/c/c3/RWS_Tarot_04_Emperor.jpg",
-     "up": "리더십과 안정된 성취가 있습니다.", "down": "지나친 고집은 조심하세요."},
+     "up": "차가운 권력이 당신을 지배한다.", "down": "고집이 당신을 파멸로 몰아간다."},
     {"name": "5. The Hierophant (교황)", "img": "https://upload.wikimedia.org/wikipedia/commons/8/8d/RWS_Tarot_05_Hierophant.jpg",
-     "up": "전통과 배움에서 좋은 조언을 얻습니다.", "down": "관습에 얽매이지 말고 자신만의 길을 찾으세요."},
+     "up": "오래된 규율이 당신을 옭아맨다.", "down": "금기를 어긴 자에게 벌이 내린다."},
     {"name": "6. The Lovers (연인)", "img": "https://upload.wikimedia.org/wikipedia/commons/3/3a/TheLovers.jpg",
-     "up": "좋은 인연과 조화로운 관계가 기대됩니다.", "down": "선택 앞에서 신중해야 합니다."},
+     "up": "운명의 인연... 혹은 저주받은 만남.", "down": "잘못된 선택이 파국을 부른다."},
     {"name": "7. The Chariot (전차)", "img": "https://upload.wikimedia.org/wikipedia/commons/9/9b/RWS_Tarot_07_Chariot.jpg",
-     "up": "의지와 추진력으로 승리합니다.", "down": "방향을 잃지 않도록 집중하세요."},
+     "up": "멈출 수 없는 폭주가 시작된다.", "down": "방향을 잃은 채 어둠 속을 달린다."},
     {"name": "8. Strength (힘)", "img": "https://upload.wikimedia.org/wikipedia/commons/f/f5/RWS_Tarot_08_Strength.jpg",
-     "up": "용기와 인내가 좋은 결과를 만듭니다.", "down": "자신감을 잃지 않도록 하세요."},
+     "up": "짐승 같은 본능을 억누르는 밤.", "down": "내면의 괴물이 고개를 든다."},
     {"name": "9. The Hermit (은둔자)", "img": "https://upload.wikimedia.org/wikipedia/commons/4/4d/RWS_Tarot_09_Hermit.jpg",
-     "up": "혼자만의 성찰이 답을 줍니다.", "down": "너무 고립되지 않도록 주의하세요."},
+     "up": "홀로 남겨진 자만이 진실을 본다.", "down": "끝없는 고독이 당신을 갉아먹는다."},
     {"name": "10. Wheel of Fortune (운명의 수레바퀴)", "img": "https://upload.wikimedia.org/wikipedia/commons/3/3c/RWS_Tarot_10_Wheel_of_Fortune.jpg",
-     "up": "행운의 변화가 찾아옵니다.", "down": "예상치 못한 변수에 유연하게 대처하세요."},
+     "up": "운명의 수레바퀴가 불길하게 돌아간다.", "down": "피할 수 없는 저주가 다가온다."},
     {"name": "11. Justice (정의)", "img": "https://upload.wikimedia.org/wikipedia/commons/e/e0/RWS_Tarot_11_Justice.jpg",
-     "up": "공정한 결과와 균형이 찾아옵니다.", "down": "편견 없이 상황을 바라보세요."},
+     "up": "심판의 저울이 당신을 가리킨다.", "down": "지난 죄가 대가를 요구한다."},
     {"name": "12. The Hanged Man (매달린 사람)", "img": "https://upload.wikimedia.org/wikipedia/commons/2/2b/RWS_Tarot_12_Hanged_Man.jpg",
-     "up": "관점을 바꾸면 새로운 답이 보입니다.", "down": "정체된 상황에서 벗어날 때입니다."},
+     "up": "거꾸로 매달린 채 세상을 본다.", "down": "빠져나올 수 없는 정체 속에 갇힌다."},
     {"name": "13. Death (죽음)", "img": "https://upload.wikimedia.org/wikipedia/commons/d/d7/RWS_Tarot_13_Death.jpg",
-     "up": "끝은 새로운 시작을 의미합니다.", "down": "변화를 두려워하지 마세요."},
+     "up": "끝이 다가온다... 무언가가 죽는다.", "down": "죽음마저 거부당한 자의 고통."},
     {"name": "14. Temperance (절제)", "img": "https://upload.wikimedia.org/wikipedia/commons/f/f8/RWS_Tarot_14_Temperance.jpg",
-     "up": "조화와 균형이 평안을 줍니다.", "down": "인내심을 가지고 조절하세요."},
+     "up": "위태로운 균형 위에 서 있다.", "down": "무너지는 평온, 다가오는 혼돈."},
     {"name": "15. The Devil (악마)", "img": "https://upload.wikimedia.org/wikipedia/commons/5/55/RWS_Tarot_15_Devil.jpg",
-     "up": "욕망을 직시하고 다스릴 때입니다.", "down": "속박에서 벗어날 기회가 옵니다."},
+     "up": "악마가 당신의 이름을 속삭인다.", "down": "사슬에 묶인 영혼이 절규한다."},
     {"name": "16. The Tower (탑)", "img": "https://upload.wikimedia.org/wikipedia/commons/5/53/RWS_Tarot_16_Tower.jpg",
-     "up": "갑작스러운 변화가 오지만 성장의 계기입니다.", "down": "위기를 미리 대비하세요."},
+     "up": "모든 것이 무너져 내리는 밤.", "down": "재앙이 예고 없이 들이닥친다."},
     {"name": "17. The Star (별)", "img": "https://upload.wikimedia.org/wikipedia/commons/d/db/RWS_Tarot_17_Star.jpg",
-     "up": "희망과 영감이 가득한 날입니다.", "down": "잠시 실망할 수 있지만 곧 회복됩니다."},
+     "up": "희미한 빛조차 곧 꺼질 것이다.", "down": "꺼져버린 희망, 남겨진 어둠."},
     {"name": "18. The Moon (달)", "img": "https://upload.wikimedia.org/wikipedia/commons/7/7f/RWS_Tarot_18_Moon.jpg",
-     "up": "직감을 믿어보세요.", "down": "불안한 마음을 다스릴 필요가 있어요."},
+     "up": "핏빛 달 아래 진실이 숨는다.", "down": "환영과 광기가 당신을 잠식한다."},
     {"name": "19. The Sun (태양)", "img": "https://upload.wikimedia.org/wikipedia/commons/1/17/RWS_Tarot_19_Sun.jpg",
-     "up": "성공과 기쁨이 함께합니다!", "down": "작은 오해가 생길 수 있으니 주의하세요."},
+     "up": "빛조차 이곳에선 창백하다.", "down": "밝음 뒤에 숨은 거짓을 조심하라."},
     {"name": "20. Judgement (심판)", "img": "https://upload.wikimedia.org/wikipedia/commons/d/dd/RWS_Tarot_20_Judgement.jpg",
-     "up": "새로운 깨달음과 부활의 시간입니다.", "down": "과거에 너무 얽매이지 마세요."},
+     "up": "무덤에서 무언가가 깨어난다.", "down": "과거의 망령이 당신을 붙잡는다."},
     {"name": "21. The World (세계)", "img": "https://upload.wikimedia.org/wikipedia/commons/f/ff/RWS_Tarot_21_World.jpg",
-     "up": "목표를 이루고 완성하는 날입니다.", "down": "마무리에 조금 더 신경 쓰세요."},
+     "up": "완성... 그러나 대가가 따른다.", "down": "닫히지 않는 순환의 굴레."},
 ]
 
 # ---------------- 상태 저장 (세션) ----------------
@@ -128,25 +141,25 @@ if "result" not in st.session_state:
     st.session_state.result = []
 
 # ---------------- 화면 구성 ----------------
-st.title("🔮 신비의 타로 운세 🔮")
-st.markdown("<p style='text-align:center;'>마음속으로 질문을 떠올리고, 카드를 뽑아보세요 ✨</p>", unsafe_allow_html=True)
+st.title("🕯️ 저주받은 타로 🕯️")
+st.markdown("<p style='text-align:center;'>어둠 속에서 질문을 떠올리고... 운명의 카드를 뒤집어라 💀</p>", unsafe_allow_html=True)
 
-name = st.text_input("🌙 이름을 입력하세요")
-mode = st.radio("🃏 운세 방식을 선택하세요", ["원 카드 (오늘의 운세)", "쓰리 카드 (과거·현재·미래)"])
+name = st.text_input("🩸 당신의 이름을 새겨라")
+mode = st.radio("🃏 어떤 운명을 확인하겠는가", ["원 카드 (오늘의 저주)", "쓰리 카드 (과거·현재·미래)"])
 
-# 뽑기 전: 둥둥 떠다니는 카드 뒷면 표시
+# 뽑기 전: 떨리는 카드 뒷면 표시
 if not st.session_state.drawn:
     num = 1 if "원 카드" in mode else 3
     cols = st.columns(num)
     for i in range(num):
         with cols[i]:
-            st.markdown("<div class='floating-card'>🎴</div>", unsafe_allow_html=True)
-            st.markdown("<p style='text-align:center;'>???</p>", unsafe_allow_html=True)
+            st.markdown("<div class='floating-card'>🂠</div>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align:center;'>. . .</p>", unsafe_allow_html=True)
 
 # ---------------- 카드 뽑기 버튼 ----------------
-if st.button("✨ 카드 뽑기 ✨"):
+if st.button("💀 운명을 뒤집어라 💀"):
     if name.strip() == "":
-        st.warning("🌟 이름을 먼저 입력해주세요!")
+        st.warning("🩸 먼저 당신의 이름을 새겨라...")
     else:
         st.session_state.drawn = True
         num = 1 if "원 카드" in mode else 3
@@ -157,11 +170,10 @@ if st.button("✨ 카드 뽑기 ✨"):
         st.rerun()
 
 # ---------------- 결과 표시 ----------------
-# ---------------- 결과 표시 ----------------
 if st.session_state.drawn and st.session_state.result:
-    st.markdown(f"<h2>✨ {name}님의 타로 결과 ✨</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2>🕯️ {name}의 운명 🕯️</h2>", unsafe_allow_html=True)
 
-    positions = ["과거", "현재", "미래"] if len(st.session_state.result) == 3 else ["오늘의 운세"]
+    positions = ["과거", "현재", "미래"] if len(st.session_state.result) == 3 else ["오늘의 저주"]
     cols = st.columns(len(st.session_state.result))
 
     # 정방향 개수 세기 (전체 분위기 판단용)
@@ -171,18 +183,19 @@ if st.session_state.drawn and st.session_state.result:
         with cols[i]:
             st.markdown(f"### {positions[i]}")
             st.image(card["img"], width=180, caption=card["name"])
-            st.markdown(f"**🔸 {direction}**")
+            st.markdown(f"**🔻 {direction}**")
             if direction == "정방향":
-                st.success(card["up"])
+                st.error(card["up"])   # 공포 분위기: 붉은 박스로 통일
                 up_count += 1
             else:
-                st.info(card["down"])
+                st.error(card["down"])
 
-    st.balloons()
+    # st.balloons() 대신 눈(snow)이 스산하게 내리는 효과
+    st.snow()
 
-    # ---------------- 🔮 종합 해석 ----------------
+    # ---------------- 🕯️ 종합 해석 ----------------
     st.markdown("---")
-    st.markdown("<h2>🔮 종합 해석 🔮</h2>", unsafe_allow_html=True)
+    st.markdown("<h2>🕯️ 운명의 속삭임 🕯️</h2>", unsafe_allow_html=True)
 
     total = len(st.session_state.result)
 
@@ -197,10 +210,10 @@ if st.session_state.drawn and st.session_state.result:
             return card["up"] if direction == "정방향" else card["down"]
 
         flow = (
-            f"**{name}**님의 지난 시간은 『{past[0]['name']}』의 기운으로, "
+            f"**{name}**의 지난날은 『{past[0]['name']}』의 그림자 속에서, "
             f"{key(past)} "
-            f"현재는 『{now[0]['name']}』가 말하듯 {key(now)} "
-            f"그리고 다가올 미래에는 『{future[0]['name']}』의 흐름 속에서 {key(future)}"
+            f"지금 이 순간 『{now[0]['name']}』가 속삭인다... {key(now)} "
+            f"그리고 다가올 어둠 속에서 『{future[0]['name']}』가 예언하길, {key(future)}"
         )
         st.markdown(f"<p style='font-size:17px; line-height:1.8;'>{flow}</p>", unsafe_allow_html=True)
 
@@ -210,31 +223,31 @@ if st.session_state.drawn and st.session_state.result:
         key = card["up"] if direction == "정방향" else card["down"]
         st.markdown(
             f"<p style='font-size:17px; line-height:1.8;'>"
-            f"오늘 **{name}**님에게 온 카드는 『{card['name']}』입니다. "
+            f"오늘 **{name}**에게 드리운 카드는 『{card['name']}』... "
             f"{key}</p>",
             unsafe_allow_html=True
         )
 
     # 전체 분위기 (정방향 비율로 판단)
-    st.markdown("### 🌈 오늘의 기운")
+    st.markdown("### 🌑 오늘의 기운")
     if total == 3:
         if up_count == 3:
-            st.success("✨ 매우 좋은 흐름이에요! 자신감을 가지고 나아가세요!")
+            st.error("🕯️ 어둠이 당신을 지켜본다... 그러나 아직 길은 남아있다.")
         elif up_count == 2:
-            st.success("🍀 대체로 긍정적인 기운이 흐르고 있어요.")
+            st.error("🩸 불길한 기운이 스며들고 있다. 뒤를 조심하라.")
         elif up_count == 1:
-            st.info("🌤️ 조심스러운 시기예요. 신중하게 행동하면 좋아요.")
+            st.error("💀 그림자가 짙어진다... 함부로 움직이지 마라.")
         else:
-            st.info("🌙 잠시 쉬어가는 시간이에요. 무리하지 마세요.")
+            st.error("⚰️ 모든 카드가 등을 돌렸다. 오늘은 숨죽여 지내라.")
     else:
         if up_count == 1:
-            st.success("🍀 긍정의 기운이 함께합니다!")
+            st.error("🕯️ 희미한 촛불 하나가 당신을 지킨다.")
         else:
-            st.info("🌙 조금은 신중함이 필요한 하루예요.")
+            st.error("💀 차가운 손길이 당신의 어깨에 닿는다...")
 
     # 다시 뽑기 버튼
     st.markdown("---")
-    if st.button("🔄 다시 뽑기"):
+    if st.button("🔄 다시 운명을 마주하라"):
         st.session_state.drawn = False
         st.session_state.result = []
         st.rerun()
