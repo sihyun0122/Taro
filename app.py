@@ -210,21 +210,26 @@ if st.session_state.drawn and st.session_state.result:
     st.snow()
 
     # ---------------- 🕯️ 종합 해석 ----------------
+        # ---------------- 🕯️ 종합 해석 ----------------
     st.markdown("---")
     st.markdown("<h2>🕯️ 운명의 속삭임 🕯️</h2>", unsafe_allow_html=True)
 
     total = len(st.session_state.result)
 
-    # 쓰리 카드일 때: 과거-현재-미래 흐름으로 엮기
+    def key(item):
+        """카드의 방향에 맞는 해석 문구를 반환"""
+        card, direction = item
+        return card["up"] if direction == "정방향" else card["down"]
+
+    def score(direction):
+        """정방향 +1, 역방향 -1"""
+        return 1 if direction == "정방향" else -1
+
+    # ===== 쓰리 카드: 과거→현재→미래 흐름 해석 =====
     if total == 3:
-        past = st.session_state.result[0]
-        now = st.session_state.result[1]
-        future = st.session_state.result[2]
+        past, now, future = st.session_state.result
 
-        def key(item):
-            card, direction = item
-            return card["up"] if direction == "정방향" else card["down"]
-
+        # 1) 흐름 문장 (기존과 동일하게 이야기 엮기)
         flow = (
             f"**{name}**의 지난날은 『{past[0]['name']}』의 그림자 속에서, "
             f"{key(past)} "
@@ -233,37 +238,79 @@ if st.session_state.drawn and st.session_state.result:
         )
         st.markdown(f"<p style='font-size:17px; line-height:1.8;'>{flow}</p>", unsafe_allow_html=True)
 
-    # 원 카드일 때
-    else:
-        card, direction = st.session_state.result[0]
-        key = card["up"] if direction == "정방향" else card["down"]
+        # 2) 진짜 해석 - 흐름의 방향을 읽는다
+        st.markdown("### 🔮 운명의 흐름 풀이")
+
+        p_score = score(past[1])
+        n_score = score(now[1])
+        f_score = score(future[1])
+
+        # 과거→현재 변화
+        if n_score > p_score:
+            change1 = "혼란스럽던 과거에서 벗어나, 현재는 실마리를 잡아가는 중이다."
+        elif n_score < p_score:
+            change1 = "평온했던 과거와 달리, 지금은 불길한 기운이 짙어지고 있다."
+        else:
+            change1 = "과거의 기운이 현재까지 그대로 이어지고 있다."
+
+        # 현재→미래 변화
+        if f_score > n_score:
+            change2 = "그러나 미래에는 어둠이 걷히고 빛이 스며들 조짐이 보인다."
+        elif f_score < n_score:
+            change2 = "하지만 미래로 갈수록 그림자는 더욱 깊어질 것이다."
+        else:
+            change2 = "미래 역시 지금과 비슷한 결로 흘러갈 것이다."
+
         st.markdown(
-            f"<p style='font-size:17px; line-height:1.8;'>"
-            f"오늘 **{name}**에게 드리운 카드는 『{card['name']}』... "
-            f"{key}</p>",
+            f"<p style='font-size:17px; line-height:1.8;'>{change1} {change2}</p>",
             unsafe_allow_html=True
         )
 
-    # 전체 분위기 (정방향 비율로 판단)
-    st.markdown("### 🌑 오늘의 기운")
-    if total == 3:
-        if up_count == 3:
-            st.error("🕯️ 어둠이 당신을 지켜본다... 그러나 아직 길은 남아있다.")
-        elif up_count == 2:
-            st.error("🩸 불길한 기운이 스며들고 있다. 뒤를 조심하라.")
-        elif up_count == 1:
-            st.error("💀 그림자가 짙어진다... 함부로 움직이지 마라.")
-        else:
-            st.error("⚰️ 모든 카드가 등을 돌렸다. 오늘은 숨죽여 지내라.")
-    else:
-        if up_count == 1:
-            st.error("🕯️ 희미한 촛불 하나가 당신을 지킨다.")
-        else:
-            st.error("💀 차가운 손길이 당신의 어깨에 닿는다...")
+        # 3) 최종 조언 - 점수 총합으로 결론
+        st.markdown("### 🌑 운명이 건네는 조언")
+        total_score = p_score + n_score + f_score
 
-    # 다시 뽑기 버튼
-    st.markdown("---")
-    if st.button("🔄 다시 운명을 마주하라"):
-        st.session_state.drawn = False
-        st.session_state.result = []
-        st.rerun()
+        if total_score >= 2:
+            advice = (
+                "세 장의 카드가 대체로 당신의 편이다. "
+                "두려움을 떨치고 지금의 흐름에 몸을 맡겨라. 길은 열려 있다."
+            )
+        elif total_score >= 0:
+            advice = (
+                "빛과 어둠이 팽팽히 맞서고 있다. "
+                "성급한 결정은 화를 부르니, 한 걸음 물러서서 상황을 지켜보라."
+            )
+        elif total_score >= -2:
+            advice = (
+                "불길한 기운이 우세하다. "
+                "지금은 나서기보다 몸을 낮추고 다음 기회를 기다리는 것이 현명하다."
+            )
+        else:
+            advice = (
+                "세 장 모두 등을 돌렸다. 무리한 시도는 파국을 부를 뿐. "
+                "잠시 모든 것을 멈추고 스스로를 지켜라."
+            )
+        st.error(advice)
+
+    # ===== 원 카드: 한 장의 카드를 깊이 풀이 =====
+    else:
+        card, direction = st.session_state.result[0]
+        st.markdown(
+            f"<p style='font-size:17px; line-height:1.8;'>"
+            f"오늘 **{name}**에게 드리운 카드는 『{card['name']}』... "
+            f"{key((card, direction))}</p>",
+            unsafe_allow_html=True
+        )
+
+        st.markdown("### 🌑 운명이 건네는 조언")
+        if direction == "정방향":
+            advice = (
+                f"『{card['name']}』가 바로 선 채 당신을 향한다. "
+                "카드가 전하는 기운을 믿고 오늘 하루를 나아가라. 당신 편이다."
+            )
+        else:
+            advice = (
+                f"『{card['name']}』가 뒤집힌 채 나타났다. "
+                "이는 경고의 신호. 서두르지 말고 주변을 살피며 신중히 움직여라."
+            )
+        st.error(advice)
